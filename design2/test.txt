@@ -1,0 +1,53 @@
+0001
+6203, correct
+data.db  query1
+
+0002
+1551, correct
+data.db  query2
+
+0003
+485129, correct
+data.db  query3
+
+0004
+4*2, correct
+data.db  query4
+
+0005
+2*3, correct
+data.db  query5  AA 1140 1  20  2012
+
+0006  correct 
+data.db query6   1  2   2012
+
+0007 correct should be good.
+query7  1  2  2012  LaGuardia
+
+0008 correct should be good.
+query7 1  2  2012  LaGuardia  "Watson Island International"
+
+0009 correct should be good.
+query8 "New York"  "New York"  01/14/2012  01/14/2012
+
+0010 correct should be good.
+query8 "New York" "New Yorka"  01/14/2012 01/14/2012
+
+0011 correct should be good.
+query8 Providence "Rhode Island"  01/14/2012 01/14/2012
+
+0012  correct should be good.
+query9 "Southwest Airlines Co." 2101 01/01/2012 01/31/2012
+
+0013 correct: 21*7,  on LINUX, NOT IMPLMENTED BY SPLITE3!!!, use new jar of sqlite3
+query10  Newark  "New Jersey"  Chicago  Illinois  01/03/2012
+add julianday(H1aDeptTime) < julianday(H1aArrTime)
+
+0014 correct  1215 * 13,  on LINUX, NOT IMPLMENTED BY SPLITE3!!!
+query11  Newark  "New Jersey"  Chicago  Illinois  01/03/2012
+add chceck julianday(H2aDeptTime) < julianday(H2aArrTime) and julianday(H1aDeptTime) < julianday(H1aArrTime)
+
+0015 wrong
+query12 Newark  "New Jersey"  Chicago  Illinois  01/03/2012,  on LINUX, NOT IMPLMENTED BY SPLITE3!!!
+TA: 35844, 19
+Me: 37927, 19

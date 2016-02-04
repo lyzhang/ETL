@@ -1,0 +1,92 @@
+create temp table tmpFlight2 as
+select H2ID, H2AirlineCode, H2FlightNum, H2DeptAirportCode, H2ArrAirportCode, H2DeptCity, H2DeptState, H2ArrCity, H2ArrState, 
+strftime('%H:%M', H2aDeptDateTime) as H2aDeptTime, strftime('%H:%M', H2aArrDateTime) as H2aArrTime,
+date(H2aDeptDateTime) as H2aDeptDate, date(H2aArrDateTime) as H2aArrDate, 
+strftime('%H:%M', H2sDeptDateTime) as H2sDeptTime, strftime('%H:%M', H2sArrDateTime) as H2sArrTime,
+date(H2sDeptDateTime) as H2sDeptDate, date(H2sArrDateTime) as H2sArrDate
+from(
+select ID as H2ID, AirlineCode as H2AirlineCode, FlightNum as H2FlightNum, DeptAirportCode as H2DeptAirportCode, 
+ArrAirportCode as H2ArrAirportCode, DeptCity as H2DeptCity, DeptState as H2DeptState, ArrCity as H2ArrCity, ArrState as H2ArrState,
+(julianday(sDeptDate || ' ' || sDeptTime) + (1.0*DeptDelay/1440) ) as H2aDeptDateTime,   
+(julianday(sArrDate || ' ' || sArrTime) + (1.0*ArrDelay/1440) ) as H2aArrDateTime, 
+julianday(sDeptDate || ' ' || sDeptTime) as H2sDeptDateTime,
+julianday(sArrDate || ' ' || sArrTime) as H2sArrDateTime
+from (
+select ID, DeptAirportCode, DeptCity, DeptState, ArrAirportCode, City as ArrCity, State as ArrState, AirlineCode, FlightNum, sDeptDate, sDeptTime, sArrDate, sArrTime from
+(select ID, DeptAirportCode, City as DeptCity, State as DeptState, AirlineCode, FlightNum, ArrAirportCode, sDeptDate, sDeptTime, sArrDate, sArrTime from
+Airport join Flight 
+on Airport.Code = Flight.DeptAirportCode)
+join Airport on ArrAirportCode = Airport.Code
+) natural join DelayedFlight
+where date(H2aDeptDateTime) = '2012-01-03' and date(H2aArrDateTime) = '2012-01-03' and
+H2aDeptDateTime < H2aArrDateTime and H2sDeptDateTime < H2sArrDateTime
+)
+
+create table tmpFlight1 as
+select H2ID as H1ID, H2AirlineCode as H1AirlineCode, H2FlightNum as H1FlightNum, H2DeptAirportCode as H1DeptAirportCode, 
+H2ArrAirportCode as H1ArrAirportCode, H2DeptCity as H1DeptCity, H2DeptState as H1DeptState, H2ArrCity as H1ArrCity, H2ArrState as H1ArrState,
+H2aDeptTime as H1aDeptTime, H2aArrTime as H1aArrTime,
+H2aDeptDate as H1aDeptDate, H2aArrDate as H1aArrDate,
+H2sDeptTime as H1sDeptTime, H2sArrTime as H1sArrTime,
+H2sDeptDate as H1sDeptDate, H2sArrDate as H1sArrDate
+from
+tmpFlight2
+where H2DeptCity = 'Newark' and H2DeptState = 'New Jersey' 
+and ( H2ArrCity <> 'Chicago' or H2ArrState <> 'Illinois')
+and ( H2ArrCity <> 'Newark' or H2ArrState <> 'New Jersey')
+
+
+create table tmpFlight3 as
+select H2ID as H3ID, H2AirlineCode as H3AirlineCode, H2FlightNum as H3FlightNum, H2DeptAirportCode as H3DeptAirportCode, 
+H2ArrAirportCode as H3ArrAirportCode, H2DeptCity as H3DeptCity, H2DeptState as H3DeptState, H2ArrCity as H3ArrCity, H2ArrState as H3ArrState,
+H2aDeptTime as H3aDeptTime, H2aArrTime as H3aArrTime,
+H2aDeptDate as H3aDeptDate, H2aArrDate as H3aArrDate,
+H2sDeptTime as H3sDeptTime, H2sArrTime as H3sArrTime,
+H2sDeptDate as H3sDeptDate, H2sArrDate as H3sArrDate
+from
+tmpFlight2
+where H2ArrCity = 'Chicago' and H2ArrState = 'Illinois' 
+and ( H2DeptCity <> 'Chicago' or H2DeptState <> 'Illinois')
+and ( H2DeptCity <> 'Newark' or H2DeptState <> 'New Jersey')
+
+
+
+create table final as
+
+select H1AirlineCode,  H1FlightNum, H1DeptAirportCode, H1aDeptTime, H1ArrAirportCode, H1aArrTime,
+H2AirlineCode,  H2FlightNum, H2DeptAirportCode, H2aDeptTime, H2ArrAirportCode, H2aArrTime,
+H3AirlineCode,  H3FlightNum, H3DeptAirportCode, H3aDeptTime, H3ArrAirportCode, H3aArrTime,
+strftime('%s', H3aArrDate || ' ' || H3aArrTime)/60 - strftime('%s', H1aDeptDate || ' ' || H1aDeptTime)/60 as Duration
+from (
+select * from (select H2ID as H1ID, H2AirlineCode as H1AirlineCode, H2FlightNum as H1FlightNum, H2DeptAirportCode as H1DeptAirportCode, 
+H2ArrAirportCode as H1ArrAirportCode, H2DeptCity as H1DeptCity, H2DeptState as H1DeptState, H2ArrCity as H1ArrCity, H2ArrState as H1ArrState,
+H2aDeptTime as H1aDeptTime, H2aArrTime as H1aArrTime,
+H2aDeptDate as H1aDeptDate, H2aArrDate as H1aArrDate,
+H2sDeptTime as H1sDeptTime, H2sArrTime as H1sArrTime,
+H2sDeptDate as H1sDeptDate, H2sArrDate as H1sArrDate
+from
+tmpFlight2
+where H2DeptCity = 'Newark' and H2DeptState = 'New Jersey' 
+and ( H2ArrCity <> 'Chicago' or H2ArrState <> 'Illinois')
+and ( H2ArrCity <> 'Newark' or H2ArrState <> 'New Jersey')
+) join tmpFlight2 on H1ArrAirportCode = H2DeptAirportCode
+where strftime('%s', H1aArrDate || ' ' || H1aArrTime) < strftime('%s', H2aDeptDate || ' ' || H2aDeptTime)
+and H2ArrAirportCode <> H1DeptAirportCode
+) join (
+select H2ID as H3ID, H2AirlineCode as H3AirlineCode, H2FlightNum as H3FlightNum, H2DeptAirportCode as H3DeptAirportCode, 
+H2ArrAirportCode as H3ArrAirportCode, H2DeptCity as H3DeptCity, H2DeptState as H3DeptState, H2ArrCity as H3ArrCity, H2ArrState as H3ArrState,
+H2aDeptTime as H3aDeptTime, H2aArrTime as H3aArrTime,
+H2aDeptDate as H3aDeptDate, H2aArrDate as H3aArrDate,
+H2sDeptTime as H3sDeptTime, H2sArrTime as H3sArrTime,
+H2sDeptDate as H3sDeptDate, H2sArrDate as H3sArrDate
+from
+tmpFlight2
+where H2ArrCity = 'Chicago' and H2ArrState = 'Illinois' 
+and ( H2DeptCity <> 'Chicago' or H2DeptState <> 'Illinois')
+and ( H2DeptCity <> 'Newark' or H2DeptState <> 'New Jersey')
+) on H2ArrAirportCode = H3DeptAirportCode 
+where strftime('%s', H2aArrDate || ' ' || H2aArrTime) < strftime('%s', H3aDeptDate || ' ' || H3aDeptTime)
+and H3ArrAirportCode <> H2DeptAirportCode and H3ArrAirportCode <> H1DeptAirportCode
+order by duration asc
+
+
